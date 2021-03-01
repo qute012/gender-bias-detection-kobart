@@ -70,6 +70,17 @@ scheduler = get_cosine_schedule_with_warmup(
     num_training_steps=len(train_dataloader)
 )
 
+def F1_scores(preds, golds, eps=1e-9):
+    tp = (preds*golds).sum()
+    tn = ((1-golds)*(1-preds)).sum()
+    fp = ((1-golds)*preds).sum()
+    fn = (golds*(1-preds)).sum()
+    
+    precision = tp/(tp+fp+eps)
+    recall = tp/(tp+fn+eps)
+    
+    return 2*(precision*recall)/(precision+recall+eps)
+
 from tqdm import tqdm
 
 best_acc = 0.0
@@ -100,13 +111,13 @@ for epoch in range(20):
         scheduler.step(epoch + i / iters)
         
         losses += loss.item()
-        
+
     model.eval()
     
-    acc = 0.0
+    scores = 0.0
     pbar = tqdm(valid_dataloader)
     for i,batch in enumerate(pbar):
-        pbar.set_description('acc: {:.2f}'.format(acc/(i+1)))
+        pbar.set_description('F1 score: {:.2f}'.format(scores/(i+1)))
         input_ids, attention_mask, labels = batch['input_ids'], batch['attention_mask'], batch['labels']
         
         input_ids = input_ids.to(model.device)
@@ -117,10 +128,9 @@ for epoch in range(20):
                      labels=None, 
                      return_dict=True)
         preds = torch.nn.functional.softmax(outs.logits, dim=1).max(dim=-1)[1]
-        acc += (((preds==labels).sum())/preds.size(0)).item()
-        
-        losses += loss.item()
+        #acc += (((preds==labels).sum())/preds.size(0)).item()
+        scores += F1_scores(preds, labels)
     
-    if acc>best_acc:
-        best_acc = acc
-        torch.save(model.state_dict(), 'models/best_acc.pth')
+    if scores>best_scores:
+        best_scores = scores
+        torch.save(model.state_dict(), 'models/best.pth')
