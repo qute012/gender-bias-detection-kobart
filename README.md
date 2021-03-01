@@ -17,3 +17,8 @@ python KGBD_task.py
 
 [koco]: https://github.com/inmoonlight/koco
 [KoBart]: https://github.com/SKT-AI/KoBART
+
+# Score
+| Dataset | Score |
+| ------- | ----- |
+| Dev     | 0.62  |
