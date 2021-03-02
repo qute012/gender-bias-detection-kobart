@@ -22,3 +22,4 @@ python KGBD_task.py
 | Dataset | Score |
 | ------- | ----- |
 | Dev     | 0.62  |
+| Test     | 0.63  |
